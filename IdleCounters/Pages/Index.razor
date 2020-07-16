@@ -1,0 +1,90 @@
+﻿@page "/"
+@using System.Threading
+
+<h1>Counter</h1>
+
+@for (int level = 0; level < TotalLevels; level++)
+{
+    
+    <Count Disabled=@IsDisabled(level)  Level="level" Unlocked="_unlocked[level]" CurrentCount="_counts[level]" OnBuy="@OnBuy" OnPrestige="@OnPrestige" />
+    @if (!_unlocked[level])
+    {
+        break;
+    }
+}
+
+
+@code {
+    private const int TotalLevels = 9;
+
+    private ulong[] _counts;
+    private bool[] _unlocked;
+
+    private bool IsDisabled(int level)
+    {
+        if (level == 0)
+        {
+            return false;
+        }
+        return _counts[0] < (ulong) Math.Pow(10, level);
+    }
+
+    private void OnPrestige(int level)
+    {
+        if (_counts[0] >= (ulong)Math.Pow(10, level))
+        {
+            for (int levelTemp = 1; levelTemp < TotalLevels; levelTemp++)
+            {
+                _counts[levelTemp] = 0;
+            }
+            _counts[0] -= (ulong) Math.Pow(10, level);
+            _unlocked[level] = true;
+            _counts[level]++;
+        }
+    }
+
+    private void OnBuy(int level)
+    {
+        if (level == 0)
+        {
+            _counts[level]++;
+        }
+        else
+        {
+            if (_counts[0] >= (ulong)Math.Pow(10, level))
+            {
+                _counts[0] -= (ulong)Math.Pow(10, level);
+                _counts[level]++;
+            }
+        }
+        InvokeAsync(() => this.StateHasChanged());
+    }
+
+
+    protected override void OnInitialized()
+    {
+        RealTimeUpdate();
+        _counts = new ulong[TotalLevels];
+        _unlocked = new bool[TotalLevels];
+        _unlocked[0] = true;
+    }
+
+    private void DoStep()
+    {
+        for (int level = 1; level < TotalLevels; level++)
+        {
+            _counts[level - 1] += _counts[level];
+        }
+    }
+
+    public async Task RealTimeUpdate()
+    {
+        while(true)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(1000));
+            DoStep();
+            InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+}
