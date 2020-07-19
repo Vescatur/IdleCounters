@@ -20,6 +20,6 @@ jobs:
       with:
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         BASE_BRANCH: master
-        BRANCH: gh-pages-from
+        BRANCH: gh-pages
         FOLDER: build/wwwroot
         SINGLE_COMMIT: true
